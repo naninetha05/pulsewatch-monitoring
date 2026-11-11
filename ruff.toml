@@ -1,0 +1,11 @@
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E", "F", "I", "B", "UP"]
+# B008: FastAPI's Depends() in argument defaults is the framework idiom.
+# UP017: keep timezone.utc for readability.
+ignore = ["B008", "UP017"]
+
+[lint.per-file-ignores]
+"tests/conftest.py" = ["E402"]
