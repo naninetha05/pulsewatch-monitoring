@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pulsewatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-locally}
+      POSTGRES_DB: pulsewatch
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulsewatch -d pulsewatch"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PULSEWATCH_DATABASE_URL: postgresql+psycopg://pulsewatch:${POSTGRES_PASSWORD:-change-me-locally}@db:5432/pulsewatch
+      PULSEWATCH_API_KEY: ${PULSEWATCH_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
