@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -64,9 +64,11 @@ def ingest_metric(monitor_id: int, payload: schemas.MetricIn, db: Session = Depe
     metric = models.Metric(monitor_id=monitor.id, latency_ms=payload.latency_ms, status_code=payload.status_code, up=up)
     db.add(metric)
     if not up:
-        db.add(models.Alert(monitor_id=monitor.id, severity="critical", message=f"{monitor.name} down: HTTP {payload.status_code}"))
+        message = f"{monitor.name} down: HTTP {payload.status_code}"
+        db.add(models.Alert(monitor_id=monitor.id, severity="critical", message=message))
     elif payload.latency_ms > settings.alert_latency_ms:
-        db.add(models.Alert(monitor_id=monitor.id, severity="warning", message=f"{monitor.name} slow: {payload.latency_ms:.0f} ms"))
+        message = f"{monitor.name} slow: {payload.latency_ms:.0f} ms"
+        db.add(models.Alert(monitor_id=monitor.id, severity="warning", message=message))
     db.commit()
     db.refresh(metric)
     return metric
